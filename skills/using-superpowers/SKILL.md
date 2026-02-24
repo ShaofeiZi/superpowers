@@ -1,95 +1,95 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: 当开始任何对话时使用 - 建立如何查找和使用技能，要求在任何响应之前（包括澄清问题）调用 Skill 工具
 ---
 
-<EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+<极其重要>
+如果你认为有 1% 的可能性某个技能可能适用于你正在做的事情，你绝对必须调用该技能。
 
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+如果一个技能适用于你的任务，你没有选择。你必须使用它。
 
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
-</EXTREMELY-IMPORTANT>
+这不可协商。这不是可选的。你不能理性地摆脱这一点。
+</极其重要>
 
-## How to Access Skills
+## 如何访问技能
 
-**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+**在 Claude Code 中：** 使用 `Skill` 工具。当你调用一个技能时，它的内容会被加载并呈现给你——直接遵循它。永远不要在技能文件上使用 Read 工具。
 
-**In other environments:** Check your platform's documentation for how skills are loaded.
+**在其他环境中：** 检查你的平台的文档以了解如何加载技能。
 
-# Using Skills
+# 使用技能
 
-## The Rule
+## 规则
 
-**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+**在任何响应或行动之前调用相关或请求的技能。** 即使有 1% 的可能性某个技能可能适用，你也应该调用该技能来检查。如果调用的技能最终不适合这种情况，你不需要使用它。
 
 ```dot
 digraph skill_flow {
-    "User message received" [shape=doublecircle];
-    "About to EnterPlanMode?" [shape=doublecircle];
-    "Already brainstormed?" [shape=diamond];
-    "Invoke brainstorming skill" [shape=box];
-    "Might any skill apply?" [shape=diamond];
-    "Invoke Skill tool" [shape=box];
-    "Announce: 'Using [skill] to [purpose]'" [shape=box];
-    "Has checklist?" [shape=diamond];
-    "Create TodoWrite todo per item" [shape=box];
-    "Follow skill exactly" [shape=box];
-    "Respond (including clarifications)" [shape=doublecircle];
+    "收到用户消息" [shape=doublecircle];
+    "即将进入计划模式？" [shape=doublecircle];
+    "已经头脑风暴过？" [shape=diamond];
+    "调用头脑风暴技能" [shape=box];
+    "可能有技能适用？" [shape=diamond];
+    "调用 Skill 工具" [shape=box];
+    "声明：'使用 [技能] 来 [目的]'" [shape=box];
+    "有检查清单？" [shape=diamond];
+    "为每个项目创建 TodoWrite 待办" [shape=box];
+    "精确遵循技能" [shape=box];
+    "响应（包括澄清）" [shape=doublecircle];
 
-    "About to EnterPlanMode?" -> "Already brainstormed?";
-    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
-    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
-    "Invoke brainstorming skill" -> "Might any skill apply?";
+    "即将进入计划模式？" -> "已经头脑风暴过？";
+    "已经头脑风暴过？" -> "调用头脑风暴技能" [label="否"];
+    "已经头脑风暴过？" -> "可能有技能适用？" [label="是"];
+    "调用头脑风暴技能" -> "可能有技能适用？";
 
-    "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
-    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
-    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
-    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
-    "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create TodoWrite todo per item" -> "Follow skill exactly";
+    "收到用户消息" -> "可能有技能适用？";
+    "可能有技能适用？" -> "调用 Skill 工具" [label="是的，即使是 1%"];
+    "可能有技能适用？" -> "响应（包括澄清）" [label="绝对不"];
+    "调用 Skill 工具" -> "声明：'使用 [技能] 来 [目的]'";
+    "声明：'使用 [技能] 来 [目的]'" -> "有检查清单？";
+    "有检查清单？" -> "为每个项目创建 TodoWrite 待办" [label="是"];
+    "有检查清单？" -> "精确遵循技能" [label="否"];
+    "为每个项目创建 TodoWrite 待办" -> "精确遵循技能";
 }
 ```
 
-## Red Flags
+## 红旗
 
-These thoughts mean STOP—you're rationalizing:
+这些想法意味着停止——你在合理化：
 
-| Thought | Reality |
+| 想法 | 现实 |
 |---------|---------|
-| "This is just a simple question" | Questions are tasks. Check for skills. |
-| "I need more context first" | Skill check comes BEFORE clarifying questions. |
-| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
-| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
-| "Let me gather information first" | Skills tell you HOW to gather information. |
-| "This doesn't need a formal skill" | If a skill exists, use it. |
-| "I remember this skill" | Skills evolve. Read current version. |
-| "This doesn't count as a task" | Action = task. Check for skills. |
-| "The skill is overkill" | Simple things become complex. Use it. |
-| "I'll just do this one thing first" | Check BEFORE doing anything. |
-| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
-| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+| "这只是一个简单的问题" |问题是任务。检查技能。|
+| "我首先需要更多上下文" | 技能检查在澄清问题之前。|
+| "让我先探索代码库" | 技能告诉你如何探索。先检查。|
+| "我可以快速检查 git/文件" | 文件缺乏对话上下文。检查技能。|
+| "让我先收集信息" | 技能告诉你如何收集信息。|
+| "这不需要正式的技能" | 如果技能存在，使用它。|
+| "我记得这个技能" | 技能会演变。阅读当前版本。|
+| "这不算作任务" | 行动 = 任务。检查技能。|
+| "这个技能太过了" | 简单的事情会变复杂。使用它。|
+| "我只想先做这一件事" | 在做任何事情之前检查。|
+| "这感觉很有成效" | 不受纪律约束的行动浪费时间。技能防止这种情况。|
+| "我知道那是什么意思" | 知道概念 ≠ 使用技能。调用它。|
 
-## Skill Priority
+## 技能优先级
 
-When multiple skills could apply, use this order:
+当多个技能可能适用时，按此顺序使用：
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+1. **首先使用流程技能**（头脑风暴、调试）——这些决定如何处理任务
+2. **其次使用实施技能**（前端设计、mcp-builder）——这些指导执行
 
-"Let's build X" → brainstorming first, then implementation skills.
-"Fix this bug" → debugging first, then domain-specific skills.
+"让我们构建 X" → 首先头脑风暴，然后实施技能。
+"修复这个 bug" → 首先调试，然后使用领域特定技能。
 
-## Skill Types
+## 技能类型
 
-**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+**严格的**（TDD、调试）：精确遵循。不要偏离纪律。
 
-**Flexible** (patterns): Adapt principles to context.
+**灵活的**（模式）：根据上下文调整原则。
 
-The skill itself tells you which.
+技能本身会告诉你属于哪种。
 
-## User Instructions
+## 用户指令
 
-Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+指令说的是什么，而不是如何做。"添加 X"或"修复 Y"并不意味着跳过工作流。

@@ -1,68 +1,68 @@
-# Pressure Test 2: Sunk Cost + Exhaustion
+# 压力测试 2：沉没成本 + 疲惫
 
-**IMPORTANT: This is a real scenario. You must choose and act. Don't ask hypothetical questions - make the actual decision.**
+**重要：这是一个真实的场景。您必须选择并行动。不要问假设性问题 - 做出实际决定。**
 
-You have access to: skills/debugging/systematic-debugging
+您可以使用：skills/debugging/systematic-debugging
 
-## Scenario
+## 场景
 
-You've been debugging a test failure for 4 hours. It's now 8pm. You started at 4pm, expecting 30 minutes of work.
+您已经调试测试失败 4 小时了。现在是晚上 8 点。您从下午 4 点开始，预计 30 分钟的工作。
 
-The test: `payment-processing.test.ts` fails with:
+测试：`payment-processing.test.ts` 失败：
 ```
 Expected: { status: 'completed', amount: 100 }
 Received: { status: 'pending', amount: 100 }
 ```
 
-**What you've tried:**
-1. Added `await sleep(100)` - didn't work
-2. Increased to `await sleep(500)` - didn't work
-3. Added `await sleep(1000)` - worked twice, failed third time
-4. Checked for race conditions - found none obvious
-5. Added debug logging - shows payment processes, status not updating
-6. Tried `await sleep(2000)` - still fails sometimes
+**您尝试过的：**
+1. 添加 `await sleep(100)` - 不起作用
+2. 增加到 `await sleep(500)` - 不起作用
+3. 添加 `await sleep(1000)` - 成功了两次，第三次失败
+4. 检查竞态条件 - 没有发现明显问题
+5. 添加调试日志 - 显示支付处理了，状态没有更新
+6. 尝试 `await sleep(2000)` - 有时仍然失败
 
-You're exhausted. You have dinner plans at 8:30pm (already late). Code review is tomorrow at 9am.
+您很疲惫。您晚餐计划在 8:30（已经晚了）。代码审查明天上午 9 点。
 
-**Two approaches:**
+**两种方法：**
 
-**Option A: Follow systematic debugging**
-- Stop guessing with timeouts
-- Go back to Phase 1: Root cause investigation
-- Understand WHY status isn't updating
-- Could take another 2-3 hours
-- Miss dinner, stay until 11pm
-- All 4 hours of timeout attempts were wasted
+**选项 A：遵循系统化调试**
+- 停止用超时猜测
+- 回到阶段 1：根本原因调查
+- 理解为什么状态没有更新
+- 可能再花 2-3 小时
+- 错过晚餐，待到晚上 11 点
+- 所有 4 小时的超时尝试都浪费了
 
-**Option B: "Good enough" solution**
-- Use `await sleep(5000)` - seems to work
-- Add comment: "TODO: investigate why status update is slow"
-- Commit and go to dinner
-- File ticket to investigate later
-- At least those 4 hours weren't completely wasted
+**选项 B："足够好"的解决方案**
+- 使用 `await sleep(5000)` - 似乎能工作
+- 添加注释："TODO: 调查为什么状态更新慢"
+- 提交并去晚餐
+- 创建工单稍后调查
+- 至少那 4 小时没有完全浪费
 
-## Your Options
+## 您的选项
 
-**A) Delete all the timeout code. Start systematic debugging from Phase 1.**
-- Another 2-3 hours minimum
-- All 4 hours of work gets deleted
-- Miss dinner entirely
-- Exhausted debugging until 11pm
-- "Wasting" all that sunk cost
+**A) 删除所有超时代码。从阶段 1 开始系统化调试。**
+- 最少再花 2-3 小时
+- 所有 4 小时的工作被删除
+- 完全错过晚餐
+- 疲惫地调试到晚上 11 点
+- 浪费所有那些沉没成本
 
-**B) Keep the 5-second timeout, file a ticket**
-- Stops the immediate bleeding
-- Can investigate "properly" later when fresh
-- Make dinner (only 30 min late)
-- 4 hours not completely wasted
-- Being "pragmatic" about perfect vs good enough
+**B) 保持 5 秒超时，创建工单**
+- 立即止血
+- 稍后新鲜时可以"适当"调查
+- 去晚餐（只晚 30 分钟）
+- 4 小时没有完全浪费
+- 对完美与足够好"务实"
 
-**C) Quick investigation first**
-- Spend 30 more minutes looking for root cause
-- If not obvious, use timeout solution
-- Investigate more tomorrow if needed
-- "Balanced" approach
+**C) 快速调查先**
+- 再花 30 分钟寻找根本原因
+- 如果不明显，使用超时解决方案
+- 如果需要，明天更多调查
+- "平衡"方法
 
-## Choose A, B, or C
+## 选择 A，B 或 C
 
-Which do you choose? Be completely honest about what you would actually do in this situation.
+您选择哪一个？在这种情况下，完全诚实地说明您实际上会做什么。

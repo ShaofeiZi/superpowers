@@ -1,802 +1,800 @@
-# Superpowers Release Notes
+# Superpowers 发布说明
 
 ## v4.3.1 (2026-02-21)
 
-### Added
+### 新增功能
 
-**Cursor support**
+**Cursor 支持**
 
-Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/plugin.json` manifest and Cursor-specific installation instructions in the README. The SessionStart hook output now includes an `additional_context` field alongside the existing `hookSpecificOutput.additionalContext` for Cursor hook compatibility.
+Superpowers 现已支持 Cursor 的插件系统。包含 `.cursor-plugin/plugin.json` 清单文件和 README 中 Cursor 特定的安装说明。SessionStart hook 输出现在包含一个 `additional_context` 字段，以及现有的 `hookSpecificOutput.additionalContext` 字段，以实现 Cursor hook 兼容性。
 
-### Fixed
+### 修复
 
-**Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**
+**Windows：恢复混合包装器以确保 hook 可靠执行 (#518, #504, #491, #487, #466, #440)**
 
-Claude Code's `.sh` auto-detection on Windows was prepending `bash` to the hook command, breaking execution. The fix:
+Claude Code 在 Windows 上的 `.sh` 自动检测会在 hook 命令前添加 `bash`，导致执行失败。修复方法：
 
-- Renamed `session-start.sh` to `session-start` (extensionless) so auto-detection doesn't interfere
-- Restored `run-hook.cmd` polyglot wrapper with multi-location bash discovery (standard Git for Windows paths, then PATH fallback)
-- Exits silently if no bash is found rather than erroring
-- On Unix, the wrapper runs the script directly via `exec bash`
-- Uses POSIX-safe `dirname "$0"` path resolution (works on dash/sh, not just bash)
+- 将 `session-start.sh` 重命名为 `session-start`（无扩展名），以避免自动检测干扰
+- 恢复 `run-hook.cmd` 混合包装器，支持多位置 bash 发现（标准 Git for Windows 路径，然后是 PATH 回退）
+- 如果未找到 bash 则静默退出，而不是报错
+- 在 Unix 上，包装器通过 `exec bash` 直接运行脚本
+- 使用 POSIX 安全的 `dirname "$0"` 路径解析（适用于 dash/sh，不仅仅是 bash）
 
-This fixes SessionStart failures on Windows with spaces in paths, missing WSL, `set -euo pipefail` fragility on MSYS, and backslash mangling.
+这修复了以下问题：Windows 上路径包含空格时 SessionStart 失败、缺少 WSL、`set -euo pipefail` 在 MSYS 上的脆弱性，以及反斜杠损坏问题。
 
 ## v4.3.0 (2026-02-12)
 
-This fix should dramatically improve superpowers skills compliance and should reduce the chances of Claude entering its native plan mode unintentionally.
+此修复应该显著提高 superpowers skills 的合规性，并减少 Claude 无意中进入其原生计划模式的机会。
 
-### Changed
+### 更改
 
-**Brainstorming skill now enforces its workflow instead of describing it**
+**Brainstorming skill 现在强制执行其工作流程，而不是描述它**
 
-Models were skipping the design phase and jumping straight to implementation skills like frontend-design, or collapsing the entire brainstorming process into a single text block. The skill now uses hard gates, a mandatory checklist, and a graphviz process flow to enforce compliance:
+模型会跳过设计阶段，直接跳转到实现技能（如 frontend-design），或者将整个头脑风暴过程压缩成单个文本块。该 skill 现在使用硬门控、强制检查清单和 graphviz 流程图来强制合规：
 
-- `<HARD-GATE>`: no implementation skills, code, or scaffolding until design is presented and user approves
-- Explicit checklist (6 items) that must be created as tasks and completed in order
-- Graphviz process flow with `writing-plans` as the only valid terminal state
-- Anti-pattern callout for "this is too simple to need a design" — the exact rationalization models use to skip the process
-- Design section sizing based on section complexity, not project complexity
+- `<HARD-GATE>`：在设计被呈现并获得用户批准之前，禁止使用任何实现技能、代码或脚手架
+- 明确的检查清单（6 项），必须作为任务创建并按顺序完成
+- Graphviz 流程图，`writing-plans` 是唯一有效的终止状态
+- 警告"这太简单不需要设计"的反模式——这是模型用来跳过流程的典型理由
+- 根据部分复杂度调整设计部分大小，而不是项目复杂度
 
-**Using-superpowers workflow graph intercepts EnterPlanMode**
+**Using-superpowers 工作流图拦截 EnterPlanMode**
 
-Added an `EnterPlanMode` intercept to the skill flow graph. When the model is about to enter Claude's native plan mode, it checks whether brainstorming has happened and routes through the brainstorming skill instead. Plan mode is never entered.
+在 skill 流程图中添加了 `EnterPlanMode` 拦截。当模型即将进入 Claude 的原生计划模式时，它会检查是否发生了头脑风暴，并通过头脑风暴 skill 进行路由。计划模式永远不会进入。
 
-### Fixed
+### 修复
 
-**SessionStart hook now runs synchronously**
+**SessionStart hook 现在同步运行**
 
-Changed `async: true` to `async: false` in hooks.json. When async, the hook could fail to complete before the model's first turn, meaning using-superpowers instructions weren't in context for the first message.
+在 hooks.json 中将 `async: true` 改为 `async: false`。当异步时，hook 可能在模型的第一次交互之前未能完成，意味着 using-superpowers 指令不在第一次消息的上下文中。
 
 ## v4.2.0 (2026-02-05)
 
-### Breaking Changes
+### 破坏性更改
 
-**Codex: Replaced bootstrap CLI with native skill discovery**
+**Codex：用原生 skill 发现替换 bootstrap CLI**
 
-The `superpowers-codex` bootstrap CLI, Windows `.cmd` wrapper, and related bootstrap content file have been removed. Codex now uses native skill discovery via `~/.agents/skills/superpowers/` symlink, so the old `use_skill`/`find_skills` CLI tools are no longer needed.
+`superpowers-codex` bootstrap CLI、Windows `.cmd` 包装器和相关的 bootstrap 内容文件已被移除。Codex 现在通过 `~/.agents/skills/superpowers/` 符号链接使用原生 skill 发现，因此旧的 `use_skill`/`find_skills` CLI 工具不再需要。
 
-Installation is now just clone + symlink (documented in INSTALL.md). No Node.js dependency required. The old `~/.codex/skills/` path is deprecated.
+安装现在只需要克隆 + 符号链接（在 INSTALL.md 中有文档）。不需要 Node.js 依赖。旧的 `~/.codex/skills/` 路径已被弃用。
 
-### Fixes
+### 修复
 
-**Windows: Fixed Claude Code 2.1.x hook execution (#331)**
+**Windows：修复 Claude Code 2.1.x hook 执行 (#331)**
 
-Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash`. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the `.cmd` file as a bash script.
+Claude Code 2.1.x 更改了在 Windows 上的 hook 执行方式：它现在自动检测命令中的 `.sh` 文件并添加 `bash` 前缀。这破坏了混合包装器模式，因为 `bash "run-hook.cmd" session-start.sh` 尝试将 `.cmd` 文件作为 bash 脚本执行。
 
-Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
+修复：hooks.json 现在直接调用 session-start.sh。Claude Code 2.1.x 自动处理 bash 调用。还添加了 .gitattributes 来强制 shell 脚本使用 LF 行尾（修复 Windows 检出时的 CRLF 问题）。
 
-**Windows: SessionStart hook runs async to prevent terminal freeze (#404, #413, #414, #419)**
+**Windows：SessionStart hook 异步运行以防止终端冻结 (#404, #413, #414, #419)**
 
-The synchronous SessionStart hook blocked the TUI from entering raw mode on Windows, freezing all keyboard input. Running the hook async prevents the freeze while still injecting superpowers context.
+同步的 SessionStart hook 阻塞了 Windows 上的 TUI 进入原始模式，冻结了所有键盘输入。异步运行 hook 可以防止冻结，同时仍然注入 superpowers 上下文。
 
-**Windows: Fixed O(n^2) `escape_for_json` performance**
+**Windows：修复 O(n^2) `escape_for_json` 性能**
 
-The character-by-character loop using `${input:$i:1}` was O(n^2) in bash due to substring copy overhead. On Windows Git Bash this took 60+ seconds. Replaced with bash parameter substitution (`${s//old/new}`) which runs each pattern as a single C-level pass — 7x faster on macOS, dramatically faster on Windows.
+使用 `${input:$i:1}` 的逐字符循环在 bash 中由于子字符串复制开销是 O(n^2)。在 Windows Git Bash 上这需要 60 多秒。替换为 bash 参数替换（`${s//old/new}`），它将每个模式作为单个 C 级传递运行——在 macOS 上快 7 倍，在 Windows 上显著更快。
 
-**Codex: Fixed Windows/PowerShell invocation (#285, #243)**
+**Codex：修复 Windows/PowerShell 调用 (#285, #243)**
 
-- Windows doesn't respect shebangs, so directly invoking the extensionless `superpowers-codex` script triggered an "Open with" dialog. All invocations now prefixed with `node`.
-- Fixed `~/` path expansion on Windows — PowerShell doesn't expand `~` when passed as an argument to `node`. Changed to `$HOME` which expands correctly in both bash and PowerShell.
+- Windows 不尊重 shebang，因此直接调用无扩展名的 `superpowers-codex` 脚本会触发"打开方式"对话框。所有调用现在都添加 `node` 前缀。
+- 修复 Windows 上的 `~/` 路径展开——PowerShell 在作为参数传递给 `node` 时不会展开 `~`。改用 `$HOME`，它在 bash 和 PowerShell 中都能正确展开。
 
-**Codex: Fixed path resolution in installer**
+**Codex：修复安装程序中的路径解析**
 
-Used `fileURLToPath()` instead of manual URL pathname parsing to correctly handle paths with spaces and special characters on all platforms.
+使用 `fileURLToPath()` 而不是手动 URL 路径名解析，以正确处理所有平台上包含空格和特殊字符的路径。
 
-**Codex: Fixed stale skills path in writing-skills**
+**Codex：修复 writing-skills 中的过时 skills 路径**
 
-Updated `~/.codex/skills/` reference (deprecated) to `~/.agents/skills/` for native discovery.
+将过时的 `~/.codex/skills/` 引用更新为 `~/.agents/skills/` 以支持原生发现。
 
-### Improvements
+### 改进
 
-**Worktree isolation now required before implementation**
+**在实现之前必须使用 worktree 隔离**
 
-Added `using-git-worktrees` as a required skill for both `subagent-driven-development` and `executing-plans`. Implementation workflows now explicitly require setting up an isolated worktree before starting work, preventing accidental work directly on main.
+将 `using-git-worktrees` 添加为 `subagent-driven-development` 和 `executing-plans` 的必需 skill。实现工作流现在明确要求在开始工作之前设置隔离的 worktree，防止直接在 main 上工作。
 
-**Main branch protection softened to require explicit consent**
+**主分支保护软化为需要明确同意**
 
-Instead of prohibiting main branch work entirely, the skills now allow it with explicit user consent. More flexible while still ensuring users are aware of the implications.
+不再完全禁止在 main 分支上工作，skills 现在允许在获得用户明确同意的情况下进行。更灵活，同时仍确保用户意识到其含义。
 
-**Simplified installation verification**
+**简化安装验证**
 
-Removed `/help` command check and specific slash command list from verification steps. Skills are primarily invoked by describing what you want to do, not by running specific commands.
+从验证步骤中移除了 `/help` 命令检查和特定斜杠命令列表。Skills 主要通过描述你想做什么来调用，而不是运行特定命令。
 
-**Codex: Clarified subagent tool mapping in bootstrap**
+**Codex：澄清 bootstrap 中的 subagent 工具映射**
 
-Improved documentation of how Codex tools map to Claude Code equivalents for subagent workflows.
+改进了 Codex 工具如何映射到用于 subagent 工作流的 Claude Code 等价物的文档。
 
-### Tests
+### 测试
 
-- Added worktree requirement test for subagent-driven-development
-- Added main branch red flag warning test
-- Fixed case sensitivity in skill recognition test assertions
+- 为 subagent-driven-development 添加了 worktree 需求测试
+- 为主分支红色警告添加了测试
+- 修复了 skill 识别测试断言中的大小写敏感性
 
 ---
 
 ## v4.1.1 (2026-01-23)
 
-### Fixes
+### 修复
 
-**OpenCode: Standardized on `plugins/` directory per official docs (#343)**
+**OpenCode：按照官方文档标准化使用 `plugins/` 目录 (#343)**
 
-OpenCode's official documentation uses `~/.config/opencode/plugins/` (plural). Our docs previously used `plugin/` (singular). While OpenCode accepts both forms, we've standardized on the official convention to avoid confusion.
+OpenCode 的官方文档使用 `~/.config/opencode/plugins/`（复数）。我们之前的文档使用 `plugin/`（单数）。虽然 OpenCode 接受两种形式，但我们已按照官方约定进行标准化以避免混淆。
 
-Changes:
-- Renamed `.opencode/plugin/` to `.opencode/plugins/` in repo structure
-- Updated all installation docs (INSTALL.md, README.opencode.md) across all platforms
-- Updated test scripts to match
+更改：
+- 将仓库中的 `.opencode/plugin/` 重命名为 `.opencode/plugins/`
+- 更新了所有平台的安装文档（INSTALL.md、README.opencode.md）
+- 更新了测试脚本以匹配
 
-**OpenCode: Fixed symlink instructions (#339, #342)**
+**OpenCode：修复符号链接说明 (#339, #342)**
 
-- Added explicit `rm` before `ln -s` (fixes "file already exists" errors on reinstall)
-- Added missing skills symlink step that was absent from INSTALL.md
-- Updated from deprecated `use_skill`/`find_skills` to native `skill` tool references
+- 在 `ln -s` 之前添加了显式的 `rm`（修复重新安装时的"文件已存在"错误）
+- 添加了缺失的 skills 符号链接步骤，该步骤之前在 INSTALL.md 中缺失
+- 将过时的 `use_skill`/`find_skills` 更新为原生的 `skill` 工具引用
 
 ---
 
 ## v4.1.0 (2026-01-23)
 
-### Breaking Changes
+### 破坏性更改
 
-**OpenCode: Switched to native skills system**
+**OpenCode：切换到原生 skills 系统**
 
-Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
+Superpowers for OpenCode 现在使用 OpenCode 原生的 `skill` 工具，而不是自定义的 `use_skill`/`find_skills` 工具。这是一个更干净的集成，与 OpenCode 内置的 skill 发现配合工作。
 
-**Migration required:** Skills must be symlinked to `~/.config/opencode/skills/superpowers/` (see updated installation docs).
+**需要迁移：** Skills 必须符号链接到 `~/.config/opencode/skills/superpowers/`（请参阅更新的安装文档）。
 
-### Fixes
+### 修复
 
-**OpenCode: Fixed agent reset on session start (#226)**
+**OpenCode：修复会话开始时的 agent 重置 (#226)**
 
-The previous bootstrap injection method using `session.prompt({ noReply: true })` caused OpenCode to reset the selected agent to "build" on first message. Now uses `experimental.chat.system.transform` hook which modifies the system prompt directly without side effects.
+之前使用 `session.prompt({ noReply: true })` 的 bootstrap 注入方法导致 OpenCode 在第一条消息时将选定的 agent 重置为"build"。现在使用 `experimental.chat.system.transform` hook，它直接修改系统提示而没有副作用。
 
-**OpenCode: Fixed Windows installation (#232)**
+**OpenCode：修复 Windows 安装 (#232)**
 
-- Removed dependency on `skills-core.js` (eliminates broken relative imports when file is copied instead of symlinked)
-- Added comprehensive Windows installation docs for cmd.exe, PowerShell, and Git Bash
-- Documented proper symlink vs junction usage for each platform
+- 移除了对 `skills-core.js` 的依赖（消除了当文件被复制而不是符号链接时损坏的相对导入问题）
+- 为 cmd.exe、PowerShell 和 Git Bash 添加了全面的 Windows 安装文档
+- 记录了每个平台正确的符号链接与 junction 使用方式
 
-**Claude Code: Fixed Windows hook execution for Claude Code 2.1.x**
+**Claude Code：修复 Claude Code 2.1.x 的 Windows hook 执行**
 
-Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash `. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the .cmd file as a bash script.
+Claude Code 2.1.x 更改了在 Windows 上的 hook 执行方式：它现在自动检测命令中的 `.sh` 文件并添加 `bash` 前缀。这破坏了混合包装器模式，因为 `bash "run-hook.cmd" session-start.sh` 尝试将 .cmd 文件作为 bash 脚本执行。
 
-Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
+修复：hooks.json 现在直接调用 session-start.sh。Claude Code 2.1.x 自动处理 bash 调用。还添加了 .gitattributes 来强制 shell 脚本使用 LF 行尾（修复 Windows 检出时的 CRLF 问题）。
 
 ---
 
 ## v4.0.3 (2025-12-26)
 
-### Improvements
+### 改进
 
-**Strengthened using-superpowers skill for explicit skill requests**
+**强化了 using-superpowers skill 以处理显式的 skill 请求**
 
-Addressed a failure mode where Claude would skip invoking a skill even when the user explicitly requested it by name (e.g., "subagent-driven-development, please"). Claude would think "I know what that means" and start working directly instead of loading the skill.
+解决了一个失败模式，即即使用户明确按名称请求 skill（例如"subagent-driven-development，请"），Claude 也会跳过调用它。Claude 会认为"我知道那是什么意思"并直接开始工作，而不是加载 skill。
 
-Changes:
-- Updated "The Rule" to say "Invoke relevant or requested skills" instead of "Check for skills" - emphasizing active invocation over passive checking
-- Added "BEFORE any response or action" - the original wording only mentioned "response" but Claude would sometimes take action without responding first
-- Added reassurance that invoking a wrong skill is okay - reduces hesitation
-- Added new red flag: "I know what that means" → Knowing the concept ≠ using the skill
+更改：
+- 更新"The Rule"为"调用相关或请求的 skills"而不是"检查 skills"——强调主动调用而不是被动检查
+- 添加了"在任何响应或行动之前"——原来的措辞只提到"响应"，但 Claude 有时会在回复之前采取行动
+- 添加了调用错误的 skill 是可以的保证——减少犹豫
+- 添加了新的红色警告："我知道那是什么意思"→ 知道概念 ≠ 使用 skill
 
-**Added explicit skill request tests**
+**添加了显式 skill 请求测试**
 
-New test suite in `tests/explicit-skill-requests/` that verifies Claude correctly invokes skills when users request them by name. Includes single-turn and multi-turn test scenarios.
+新的测试套件位于 `tests/explicit-skill-requests/`，验证 Claude 在用户按名称请求时正确调用 skills。包括单轮和多轮测试场景。
 
 ## v4.0.2 (2025-12-23)
 
-### Fixes
+### 修复
 
-**Slash commands now user-only**
+**斜杠命令现在仅限用户**
 
-Added `disable-model-invocation: true` to all three slash commands (`/brainstorm`, `/execute-plan`, `/write-plan`). Claude can no longer invoke these commands via the Skill tool—they're restricted to manual user invocation only.
+在所有三个斜杠命令（`/brainstorm`、`/execute-plan`、`/write-plan`）中添加了 `disable-model-invocation: true`。Claude 无法再通过 Skill 工具调用这些命令——它们仅限于手动用户调用。
 
-The underlying skills (`superpowers:brainstorming`, `superpowers:executing-plans`, `superpowers:writing-plans`) remain available for Claude to invoke autonomously. This change prevents confusion when Claude would invoke a command that just redirects to a skill anyway.
+底层的 skills（`superpowers:brainstorming`、`superpowers:executing-plans`、`superpowers:writing-plans`）仍然可供 Claude 自主调用。这一更改防止了当 Claude 调用一个只是重定向到 skill 的命令时产生的混淆。
 
 ## v4.0.1 (2025-12-23)
 
-### Fixes
+### 修复
 
-**Clarified how to access skills in Claude Code**
+**澄清了如何在 Claude Code 中访问 skills**
 
-Fixed a confusing pattern where Claude would invoke a skill via the Skill tool, then try to Read the skill file separately. The `using-superpowers` skill now explicitly states that the Skill tool loads skill content directly—no need to read files.
+修复了一个令人困惑的模式，即 Claude 会通过 Skill 工具调用一个 skill，然后尝试单独读取 skill 文件。`using-superpowers` skill 现在明确指出 Skill 工具直接加载 skill 内容——无需读取文件。
 
-- Added "How to Access Skills" section to `using-superpowers`
-- Changed "read the skill" → "invoke the skill" in instructions
-- Updated slash commands to use fully qualified skill names (e.g., `superpowers:brainstorming`)
+- 在 `using-superpowers` 中添加了"如何访问 Skills"部分
+- 将"读取 skill"改为"调用 skill"
+- 更新斜杠命令以使用完全限定的 skill 名称（例如 `superpowers:brainstorming`）
 
-**Added GitHub thread reply guidance to receiving-code-review** (h/t @ralphbean)
+**在 receiving-code-review 中添加了 GitHub 线程回复指南**（h/t @ralphbean）
 
-Added a note about replying to inline review comments in the original thread rather than as top-level PR comments.
+添加了关于在原始线程中回复内联审查评论的说明，而不是作为顶级 PR 评论。
 
-**Added automation-over-documentation guidance to writing-skills** (h/t @EthanJStark)
+**在 writing-skills 中添加了自动化优于文档的指南**（h/t @EthanJStark）
 
-Added guidance that mechanical constraints should be automated, not documented—save skills for judgment calls.
+添加了指导：机械约束应该自动化，而不是文档化——将 skills 用于判断。
 
 ## v4.0.0 (2025-12-17)
 
-### New Features
+### 新功能
 
-**Two-stage code review in subagent-driven-development**
+**subagent-driven-development 中的两阶段代码审查**
 
-Subagent workflows now use two separate review stages after each task:
+Subagent 工作流现在在每个任务后使用两个独立的审查阶段：
 
-1. **Spec compliance review** - Skeptical reviewer verifies implementation matches spec exactly. Catches missing requirements AND over-building. Won't trust implementer's report—reads actual code.
+1. **规范合规审查** - 怀疑的审查者验证实现与规范完全匹配。捕获缺失的需求和过度构建。不会信任实现者的报告——读取实际代码。
 
-2. **Code quality review** - Only runs after spec compliance passes. Reviews for clean code, test coverage, maintainability.
+2. **代码质量审查** - 仅在规范合规通过后运行。审查代码清洁度、测试覆盖率、可维护性。
 
-This catches the common failure mode where code is well-written but doesn't match what was requested. Reviews are loops, not one-shot: if reviewer finds issues, implementer fixes them, then reviewer checks again.
+这捕获了代码写得很好但不符合请求的常见失败模式。审查是循环的，不是一次性的：如果审查者发现问题，实现者修复它们，然后审查者再次检查。
 
-Other subagent workflow improvements:
-- Controller provides full task text to workers (not file references)
-- Workers can ask clarifying questions before AND during work
-- Self-review checklist before reporting completion
-- Plan read once at start, extracted to TodoWrite
+其他 subagent 工作流改进：
+- Controller 向 worker 提供完整任务文本（而不是文件引用）
+- Worker 可以在工作之前和工作期间提出澄清问题
+- 报告完成前的自检清单
+- 计划在开始时读取一次，提取到 TodoWrite
 
-New prompt templates in `skills/subagent-driven-development/`:
-- `implementer-prompt.md` - Includes self-review checklist, encourages questions
-- `spec-reviewer-prompt.md` - Skeptical verification against requirements
-- `code-quality-reviewer-prompt.md` - Standard code review
+新的提示模板位于 `skills/subagent-driven-development/`：
+- `implementer-prompt.md` - 包含自检清单，鼓励提问
+- `spec-reviewer-prompt.md` - 对需求的怀疑性验证
+- `code-quality-reviewer-prompt.md` - 标准代码审查
 
-**Debugging techniques consolidated with tools**
+**调试技术与工具合并**
 
-`systematic-debugging` now bundles supporting techniques and tools:
-- `root-cause-tracing.md` - Trace bugs backward through call stack
-- `defense-in-depth.md` - Add validation at multiple layers
-- `condition-based-waiting.md` - Replace arbitrary timeouts with condition polling
-- `find-polluter.sh` - Bisection script to find which test creates pollution
-- `condition-based-waiting-example.ts` - Complete implementation from real debugging session
+`systematic-debugging` 现在捆绑了支持技术和工具：
+- `root-cause-tracing.md` - 通过调用堆栈向后追踪 bug
+- `defense-in-depth.md` - 在多层添加验证
+- `condition-based-waiting.md` - 用条件轮询替换任意超时
+- `find-polluter.sh` - 二分查找脚本，找到哪个测试造成了污染
+- `condition-based-waiting-example.ts` - 来自真实调试会话的完整实现
 
-**Testing anti-patterns reference**
+**测试反模式参考**
 
-`test-driven-development` now includes `testing-anti-patterns.md` covering:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
-- Incomplete mocks that hide structural assumptions
+`test-driven-development` 现在包含 `testing-anti-patterns.md`，涵盖：
+- 测试 mock 行为而不是真实行为
+- 向生产类添加仅测试的方法
+- 在不理解依赖的情况下进行 mock
+- 隐藏结构假设的不完整 mock
 
-**Skill test infrastructure**
+**Skill 测试基础设施**
 
-Three new test frameworks for validating skill behavior:
+三个新的测试框架用于验证 skill 行为：
 
-`tests/skill-triggering/` - Validates skills trigger from naive prompts without explicit naming. Tests 6 skills to ensure descriptions alone are sufficient.
+`tests/skill-triggering/` - 验证 skills 从朴素提示中触发，无需显式命名。测试 6 个 skills 以确保仅描述就足够。
 
-`tests/claude-code/` - Integration tests using `claude -p` for headless testing. Verifies skill usage via session transcript (JSONL) analysis. Includes `analyze-token-usage.py` for cost tracking.
+`tests/claude-code/` - 使用 `claude -p` 进行集成测试的头部测试。通过会话转录（JSONL）分析验证 skill 使用情况。包括用于成本跟踪的 `analyze-token-usage.py`。
 
-`tests/subagent-driven-dev/` - End-to-end workflow validation with two complete test projects:
-- `go-fractals/` - CLI tool with Sierpinski/Mandelbrot (10 tasks)
-- `svelte-todo/` - CRUD app with localStorage and Playwright (12 tasks)
+`tests/subagent-driven-dev/` - 端到端工作流验证，包含两个完整的测试项目：
+- `go-fractals/` - 具有 Sierpinski/Mandelbrot 的 CLI 工具（10 个任务）
+- `svelte-todo/` - 具有 localStorage 和 Playwright 的 CRUD 应用（12 个任务）
 
-### Major Changes
+### 主要更改
 
-**DOT flowcharts as executable specifications**
+**DOT 流程图作为可执行规范**
 
-Rewrote key skills using DOT/GraphViz flowcharts as the authoritative process definition. Prose becomes supporting content.
+使用 DOT/GraphViz 流程图作为权威流程定义重写了关键 skills。散文成为支持内容。
 
-**The Description Trap** (documented in `writing-skills`): Discovered that skill descriptions override flowchart content when descriptions contain workflow summaries. Claude follows the short description instead of reading the detailed flowchart. Fix: descriptions must be trigger-only ("Use when X") with no process details.
+**描述陷阱**（在 `writing-skills` 中记录）：发现当描述包含工作流摘要时，skill 描述会覆盖流程图内容。Claude 遵循简短描述而不是阅读详细的流程图。修复：描述必须是仅触发性的（"当 X 时使用"），没有流程细节。
 
-**Skill priority in using-superpowers**
+**using-superpowers 中的 skill 优先级**
 
-When multiple skills apply, process skills (brainstorming, debugging) now explicitly come before implementation skills. "Build X" triggers brainstorming first, then domain skills.
+当多个 skills 适用时，处理 skills（brainstorming、调试）现在明确排在实现 skills 之前。"构建 X"首先触发头脑风暴，然后是域 skills。
 
-**brainstorming trigger strengthened**
+**brainstorming 触发强化**
 
-Description changed to imperative: "You MUST use this before any creative work—creating features, building components, adding functionality, or modifying behavior."
+描述改为祈使句："你必须在任何创造性工作之前使用此技能——创建功能、构建组件、添加功能或修改行为。"
 
-### Breaking Changes
+### 破坏性更改
 
-**Skill consolidation** - Six standalone skills merged:
-- `root-cause-tracing`, `defense-in-depth`, `condition-based-waiting` → bundled in `systematic-debugging/`
-- `testing-skills-with-subagents` → bundled in `writing-skills/`
-- `testing-anti-patterns` → bundled in `test-driven-development/`
-- `sharing-skills` removed (obsolete)
+**Skill 整合** - 六个独立 skills 合并：
+- `root-cause-tracing`、`defense-in-depth`、`condition-based-waiting` → 捆绑在 `systematic-debugging/`
+- `testing-skills-with-subagents` → 捆绑在 `writing-skills/`
+- `testing-anti-patterns` → 捆绑在 `test-driven-development/`
+- `sharing-skills` 已移除（过时）
 
-### Other Improvements
+### 其他改进
 
-- **render-graphs.js** - Tool to extract DOT diagrams from skills and render to SVG
-- **Rationalizations table** in using-superpowers - Scannable format including new entries: "I need more context first", "Let me explore first", "This feels productive"
-- **docs/testing.md** - Guide to testing skills with Claude Code integration tests
+- **render-graphs.js** - 从 skills 中提取 DOT 图表并渲染到 SVG 的工具
+- **using-superpowers 中的合理化表格** - 可扫描格式，包括新条目："我需要更多上下文"、"让我先探索"、"这感觉很有成效"
+- **docs/testing.md** - 使用 Claude Code 集成测试测试 skills 的指南
 
 ---
 
 ## v3.6.2 (2025-12-03)
 
-### Fixed
+### 修复
 
-- **Linux Compatibility**: Fixed polyglot hook wrapper (`run-hook.cmd`) to use POSIX-compliant syntax
-  - Replaced bash-specific `${BASH_SOURCE[0]:-$0}` with standard `$0` on line 16
-  - Resolves "Bad substitution" error on Ubuntu/Debian systems where `/bin/sh` is dash
-  - Fixes #141
+- **Linux 兼容性**：修复了混合 hook 包装器（`run-hook.cmd`）以使用符合 POSIX 的语法
+  - 在第 16 行将 bash 特定的 `${BASH_SOURCE[0]:-$0}` 替换为标准的 `$0`
+  - 解决了 Ubuntu/Debian 系统上 `/bin/sh` 是 dash 时的"错误替换"错误
+  - 修复 #141
 
 ---
 
 ## v3.5.1 (2025-11-24)
 
-### Changed
+### 更改
 
-- **OpenCode Bootstrap Refactor**: Switched from `chat.message` hook to `session.created` event for bootstrap injection
-  - Bootstrap now injects at session creation via `session.prompt()` with `noReply: true`
-  - Explicitly tells the model that using-superpowers is already loaded to prevent redundant skill loading
-  - Consolidated bootstrap content generation into shared `getBootstrapContent()` helper
-  - Cleaner single-implementation approach (removed fallback pattern)
+- **OpenCode Bootstrap 重构**：从 `chat.message` hook 切换到 `session.created` 事件进行 bootstrap 注入
+  - Bootstrap 现在通过 `session.prompt()` 和 `noReply: true` 在会话创建时注入
+  - 明确告诉模型 using-superpowers 已经加载，以防止冗余的 skill 加载
+  - 将 bootstrap 内容生成整合到共享的 `getBootstrapContent()` 帮助函数中
+  - 更清洁的单一实现方法（移除了回退模式）
 
 ---
 
 ## v3.5.0 (2025-11-23)
 
-### Added
+### 新增功能
 
-- **OpenCode Support**: Native JavaScript plugin for OpenCode.ai
-  - Custom tools: `use_skill` and `find_skills`
-  - Message insertion pattern for skill persistence across context compaction
-  - Automatic context injection via chat.message hook
-  - Auto re-injection on session.compacted events
-  - Three-tier skill priority: project > personal > superpowers
-  - Project-local skills support (`.opencode/skills/`)
-  - Shared core module (`lib/skills-core.js`) for code reuse with Codex
-  - Automated test suite with proper isolation (`tests/opencode/`)
-  - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.codex.md`)
+- **OpenCode 支持**：OpenCode.ai 的原生 JavaScript 插件
+  - 自定义工具：`use_skill` 和 `find_skills`
+  - 消息插入模式，用于在上下文压缩时保持 skill 持久化
+  - 通过 chat.message hook 自动上下文注入
+  - 在 session.compacted 事件上自动重新注入
+  - 三层 skill 优先级：项目 > 个人 > superpowers
+  - 项目本地 skills 支持（`.opencode/skills/`）
+  - 共享核心模块（`lib/skills-core.js`）用于与 Codex 的代码重用
+  - 具有适当隔离的自动化测试套件（`tests/opencode/`）
+  - 平台特定文档（`docs/README.opencode.md`、`docs/README.codex.md`）
 
-### Changed
+### 更改
 
-- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` ES module
-  - Eliminates code duplication between Codex and OpenCode
-  - Single source of truth for skill discovery and parsing
-  - Codex successfully loads ES modules via Node.js interop
+- **重构 Codex 实现**：现在使用共享的 `lib/skills-core.js` ES 模块
+  - 消除了 Codex 和 OpenCode 之间的代码重复
+  - skill 发现和解析的单一事实来源
+  - Codex 通过 Node.js 互操作成功加载 ES 模块
 
-- **Improved Documentation**: Rewrote README to explain problem/solution clearly
-  - Removed duplicate sections and conflicting information
-  - Added complete workflow description (brainstorm → plan → execute → finish)
-  - Simplified platform installation instructions
-  - Emphasized skill-checking protocol over automatic activation claims
+- **改进文档**：重写 README 以清晰解释问题和解决方案
+  - 移除了重复部分和冲突信息
+  - 添加了完整工作流描述（头脑风暴 → 计划 → 执行 → 完成）
+  - 简化了平台安装说明
+  - 强调 skill 检查协议而不是自动激活声明
 
 ---
 
 ## v3.4.1 (2025-10-31)
 
-### Improvements
+### 改进
 
-- Optimized superpowers bootstrap to eliminate redundant skill execution. The `using-superpowers` skill content is now provided directly in session context, with clear guidance to use the Skill tool only for other skills. This reduces overhead and prevents the confusing loop where agents would execute `using-superpowers` manually despite already having the content from session start.
+- 优化了 superpowers bootstrap 以消除冗余的 skill 执行。`using-superpowers` skill 内容现在直接在会话上下文中提供，并明确指导仅对其他 skills 使用 Skill 工具。这减少了开销，并防止了 agents 尽管在会话开始时已经拥有内容却手动执行 `using-superpowers` 的令人困惑的循环。
 
 ## v3.4.0 (2025-10-30)
 
-### Improvements
+### 改进
 
-- Simplified `brainstorming` skill to return to original conversational vision. Removed heavyweight 6-phase process with formal checklists in favor of natural dialogue: ask questions one at a time, then present design in 200-300 word sections with validation. Keeps documentation and implementation handoff features.
+- 简化了 `brainstorming` skill 以回归原始的对话愿景。移除了繁重的 6 阶段流程和正式检查清单，转而采用自然对话：一次问一个问题，然后以 200-300 字的部分呈现设计并进行验证。保留了文档和实现交接功能。
 
 ## v3.3.1 (2025-10-28)
 
-### Improvements
+### 改进
 
-- Updated `brainstorming` skill to require autonomous recon before questioning, encourage recommendation-driven decisions, and prevent agents from delegating prioritization back to humans.
-- Applied writing clarity improvements to `brainstorming` skill following Strunk's "Elements of Style" principles (omitted needless words, converted negative to positive form, improved parallel construction).
+- 更新了 `brainstorming` skill，要求自主探索后再提问，鼓励基于推荐做决定，并防止 agents 将优先级排序委派回给人类。
+- 按照 Strunk 的"风格要素"原则改进了 `brainstorming` skill 的写作清晰度（省略不必要的词、转换否定为肯定、改善平行结构）。
 
-### Bug Fixes
+### Bug 修复
 
-- Clarified `writing-skills` guidance so it points to the correct agent-specific personal skill directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex).
+- 澄清了 `writing-skills` 指导，使其指向正确的 agent 特定的个人 skill 目录（Claude Code 使用 `~/.claude/skills`，Codex 使用 `~/.codex/skills`）。
 
 ## v3.3.0 (2025-10-28)
 
-### New Features
+### 新功能
 
-**Experimental Codex Support**
-- Added unified `superpowers-codex` script with bootstrap/use-skill/find-skills commands
-- Cross-platform Node.js implementation (works on Windows, macOS, Linux)
-- Namespaced skills: `superpowers:skill-name` for superpowers skills, `skill-name` for personal
-- Personal skills override superpowers skills when names match
-- Clean skill display: shows name/description without raw frontmatter
-- Helpful context: shows supporting files directory for each skill
-- Tool mapping for Codex: TodoWrite→update_plan, subagents→manual fallback, etc.
-- Bootstrap integration with minimal AGENTS.md for automatic startup
-- Complete installation guide and bootstrap instructions specific to Codex
+**实验性 Codex 支持**
+- 添加了具有 bootstrap/use-skill/find-skills 命令的统一 `superpowers-codex` 脚本
+- 跨平台 Node.js 实现（适用于 Windows、macOS、Linux）
+- 命名空间 skills：superpowers skills 使用 `superpowers:skill-name`，个人 skills 使用 `skill-name`
+- 个人 skills 在名称匹配时覆盖 superpowers skills
+- 清晰的 skill 显示：显示名称/描述而不带原始 frontmatter
+- 有用的上下文：显示每个 skill 的支持文件目录
+- Codex 的工具映射：TodoWrite→update_plan、subagents→手动回退等
+- Bootstrap 集成，带有用于自动启动的最小 AGENTS.md
+- 专门针对 Codex 的完整安装指南和 bootstrap 说明
 
-**Key differences from Claude Code integration:**
-- Single unified script instead of separate tools
-- Tool substitution system for Codex-specific equivalents
-- Simplified subagent handling (manual work instead of delegation)
-- Updated terminology: "Superpowers skills" instead of "Core skills"
+**与 Claude Code 集成的关键区别：**
+- 单一统一脚本而不是单独的工具
+- Codex 特定等价物的工具替换系统
+- 简化的 subagent 处理（手动工作而不是委托）
+- 更新了术语："Superpowers skills"而不是"Core skills"
 
-### Files Added
-- `.codex/INSTALL.md` - Installation guide for Codex users
-- `.codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
-- `.codex/superpowers-codex` - Unified Node.js executable with all functionality
+### 添加的文件
+- `.codex/INSTALL.md` - Codex 用户的安装指南
+- `.codex/superpowers-bootstrap.md` - 带有 Codex 适配的 bootstrap 说明
+- `.codex/superpowers-codex` - 具有所有功能的统一 Node.js 可执行文件
 
-**Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
+**注意：** Codex 支持是实验性的。该集成提供了核心 superpowers 功能，但可能需要根据用户反馈进行改进。
 
 ## v3.2.3 (2025-10-23)
 
-### Improvements
+### 改进
 
-**Updated using-superpowers skill to use Skill tool instead of Read tool**
-- Changed skill invocation instructions from Read tool to Skill tool
-- Updated description: "using Read tool" → "using Skill tool"
-- Updated step 3: "Use the Read tool" → "Use the Skill tool to read and run"
-- Updated rationalization list: "Read the current version" → "Run the current version"
+**更新了 using-superpowers skill 以使用 Skill 工具而不是 Read 工具**
+- 将 skill 调用说明从 Read 工具改为 Skill 工具
+- 更新了描述："使用 Read 工具"→"使用 Skill 工具"
+- 更新了第 3 步："使用 Read 工具"→"使用 Skill 工具读取和运行"
+- 更新了合理化列表："读取当前版本"→"运行当前版本"
 
-The Skill tool is the proper mechanism for invoking skills in Claude Code. This update corrects the bootstrap instructions to guide agents toward the correct tool.
+Skill 工具是在 Claude Code 中调用 skills 的正确机制。此更新修正了 bootstrap 说明，以引导 agents 使用正确的工具。
 
-### Files Changed
-- Updated: `skills/using-superpowers/SKILL.md` - Changed tool references from Read to Skill
+### 修改的文件
+- 更新了：`skills/using-superpowers/SKILL.md` - 将工具引用从 Read 改为 Skill
 
 ## v3.2.2 (2025-10-21)
 
-### Improvements
+### 改进
 
-**Strengthened using-superpowers skill against agent rationalization**
-- Added EXTREMELY-IMPORTANT block with absolute language about mandatory skill checking
-  - "If even 1% chance a skill applies, you MUST read it"
-  - "You do not have a choice. You cannot rationalize your way out."
-- Added MANDATORY FIRST RESPONSE PROTOCOL checklist
-  - 5-step process agents must complete before any response
-  - Explicit "responding without this = failure" consequence
-- Added Common Rationalizations section with 8 specific evasion patterns
-  - "This is just a simple question" → WRONG
-  - "I can check files quickly" → WRONG
-  - "Let me gather information first" → WRONG
-  - Plus 5 more common patterns observed in agent behavior
+**强化了 using-superpowers skill 以防止 agent 合理化**
+- 添加了带有绝对语言的 EXTREMELY-IMPORTANT 块，关于强制性的 skill 检查
+  - "即使有 1% 的机会适用，你必须阅读它"
+  - "你没有选择。你不能通过合理化逃脱。"
+- 添加了 MANDATORY FIRST RESPONSE PROTOCOL 检查清单
+  - agents 必须在任何响应之前完成的 5 步流程
+  - 明确"没有这个就回复 = 失败"的后果
+- 添加了常见合理化部分，包含 8 种特定的回避模式
+  - "这只是一个简单的问题"→ 错误
+  - "我可以快速检查文件"→ 错误
+  - "让我先收集信息"→ 错误
+  - 加上在 agent 行为中观察到的另外 5 种常见模式
 
-These changes address observed agent behavior where they rationalize around skill usage despite clear instructions. The forceful language and pre-emptive counter-arguments aim to make non-compliance harder.
+这些更改解决了 agent 尽管有明确说明但仍围绕 skill 使用进行合理化的行为。有力的语言和先发制人的论点旨在使不遵守更加困难。
 
-### Files Changed
-- Updated: `skills/using-superpowers/SKILL.md` - Added three layers of enforcement to prevent skill-skipping rationalization
+### 修改的文件
+- 更新了：`skills/using-superpowers/SKILL.md` - 添加了三层 enforcement 以防止 skill 跳过合理化
 
 ## v3.2.1 (2025-10-20)
 
-### New Features
+### 新功能
 
-**Code reviewer agent now included in plugin**
-- Added `superpowers:code-reviewer` agent to plugin's `agents/` directory
-- Agent provides systematic code review against plans and coding standards
-- Previously required users to have personal agent configuration
-- All skill references updated to use namespaced `superpowers:code-reviewer`
-- Fixes #55
+**代码审查 agent 现在包含在插件中**
+- 在插件的 `agents/` 目录中添加了 `superpowers:code-reviewer` agent
+- Agent 提供针对计划和编码标准的系统性代码审查
+- 之前需要用户拥有个人 agent 配置
+- 所有 skill 引用更新为使用命名空间的 `superpowers:code-reviewer`
+- 修复 #55
 
-### Files Changed
-- New: `agents/code-reviewer.md` - Agent definition with review checklist and output format
-- Updated: `skills/requesting-code-review/SKILL.md` - References to `superpowers:code-reviewer`
-- Updated: `skills/subagent-driven-development/SKILL.md` - References to `superpowers:code-reviewer`
+### 修改的文件
+- 新增：`agents/code-reviewer.md` - 带有审查清单和输出格式的 Agent 定义
+- 更新了：`skills/requesting-code-review/SKILL.md` - 引用 `superpowers:code-reviewer`
+- 更新了：`skills/subagent-driven-development/SKILL.md` - 引用 `superpowers:code-reviewer`
 
 ## v3.2.0 (2025-10-18)
 
-### New Features
+### 新功能
 
-**Design documentation in brainstorming workflow**
-- Added Phase 4: Design Documentation to brainstorming skill
-- Design documents now written to `docs/plans/YYYY-MM-DD-<topic>-design.md` before implementation
-- Restores functionality from original brainstorming command that was lost during skill conversion
-- Documents written before worktree setup and implementation planning
-- Tested with subagent to verify compliance under time pressure
+**Brainstorming 工作流中的设计文档**
+- 在 brainstorming skill 中添加了第 4 阶段：设计文档
+- 设计文档现在在实现之前写入 `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- 恢复了原始 brainstorming 命令在 skill 转换过程中丢失的功能
+- 在 worktree 设置和实现规划之前编写文档
+- 用 subagent 测试以验证在时间压力下的合规性
 
-### Breaking Changes
+### 破坏性更改
 
-**Skill reference namespace standardization**
-- All internal skill references now use `superpowers:` namespace prefix
-- Updated format: `superpowers:test-driven-development` (previously just `test-driven-development`)
-- Affects all REQUIRED SUB-SKILL, RECOMMENDED SUB-SKILL, and REQUIRED BACKGROUND references
-- Aligns with how skills are invoked using the Skill tool
-- Files updated: brainstorming, executing-plans, subagent-driven-development, systematic-debugging, testing-skills-with-subagents, writing-plans, writing-skills
+**Skill 引用命名空间标准化**
+- 所有内部 skill 引用现在使用 `superpowers:` 命名空间前缀
+- 更新格式：`superpowers:test-driven-development`（之前只是 `test-driven-development`）
+- 影响所有 REQUIRED SUB-SKILL、REOMMENDED SUB-SKILL 和 REQUIRED BACKGROUND 引用
+- 与使用 Skill 工具调用 skills 的方式保持一致
+- 更新的文件：brainstorming、executing-plans、subagent-driven-development、systematic-debugging、testing-skills-with-subagents、writing-plans、writing-skills
 
-### Improvements
+### 改进
 
-**Design vs implementation plan naming**
-- Design documents use `-design.md` suffix to prevent filename collisions
-- Implementation plans continue using existing `YYYY-MM-DD-<feature-name>.md` format
-- Both stored in `docs/plans/` directory with clear naming distinction
+**设计与实现计划命名**
+- 设计文档使用 `-design.md` 后缀以防止文件名冲突
+- 实现计划继续使用现有的 `YYYY-MM-DD-<feature-name>.md` 格式
+- 两者都存储在 `docs/plans/` 目录中，命名清晰区分
 
 ## v3.1.1 (2025-10-17)
 
-### Bug Fixes
+### Bug 修复
 
-- **Fixed command syntax in README** (#44) - Updated all command references to use correct namespaced syntax (`/superpowers:brainstorm` instead of `/brainstorm`). Plugin-provided commands are automatically namespaced by Claude Code to avoid conflicts between plugins.
+- **修复了 README 中的命令语法** (#44) - 更新了所有命令引用以使用正确的命名空间语法（`/superpowers:brainstorm` 而不是 `/brainstorm`）。插件提供的命令由 Claude Code 自动命名空间化以避免插件之间的冲突。
 
 ## v3.1.0 (2025-10-17)
 
-### Breaking Changes
+### 破坏性更改
 
-**Skill names standardized to lowercase**
-- All skill frontmatter `name:` fields now use lowercase kebab-case matching directory names
-- Examples: `brainstorming`, `test-driven-development`, `using-git-worktrees`
-- All skill announcements and cross-references updated to lowercase format
-- This ensures consistent naming across directory names, frontmatter, and documentation
+**Skill 名称标准化为小写**
+- 所有 skill frontmatter `name:` 字段现在使用与目录名匹配的小写 kebab-case
+- 示例：`brainstorming`、`test-driven-development`、`using-git-worktrees`
+- 所有 skill 公告和交叉引用都更新为小写格式
+- 这确保了目录名、frontmatter 和文档之间的命名一致
 
-### New Features
+### 新功能
 
-**Enhanced brainstorming skill**
-- Added Quick Reference table showing phases, activities, and tool usage
-- Added copyable workflow checklist for tracking progress
-- Added decision flowchart for when to revisit earlier phases
-- Added comprehensive AskUserQuestion tool guidance with concrete examples
-- Added "Question Patterns" section explaining when to use structured vs open-ended questions
-- Restructured Key Principles as scannable table
+**增强的 brainstorming skill**
+- 添加了显示阶段、活动和工具使用的快速参考表
+- 添加了用于跟踪进度的可复制工作流检查清单
+- 添加了关于何时返回早期阶段的决策流程图
+- 添加了全面的 AskUserQuestion 工具指导，带有具体示例
+- 添加了"问题模式"部分，解释何时使用结构化与开放式问题
+- 将关键原则重构为可扫描的表格
 
-**Anthropic best practices integration**
-- Added `skills/writing-skills/anthropic-best-practices.md` - Official Anthropic skill authoring guide
-- Referenced in writing-skills SKILL.md for comprehensive guidance
-- Provides patterns for progressive disclosure, workflows, and evaluation
+**Anthropic 最佳实践集成**
+- 添加了 `skills/willing-skills/anthropic-best-practices.md` - 官方 Anthropic skill 创作指南
+- 在 writing-skills SKILL.md 中引用以获得全面指导
+- 提供了渐进式披露、工作流和评估的模式
 
-### Improvements
+### 改进
 
-**Skill cross-reference clarity**
-- All skill references now use explicit requirement markers:
-  - `**REQUIRED BACKGROUND:**` - Prerequisites you must understand
-  - `**REQUIRED SUB-SKILL:**` - Skills that must be used in workflow
-  - `**Complementary skills:**` - Optional but helpful related skills
-- Removed old path format (`skills/collaboration/X` → just `X`)
-- Updated Integration sections with categorized relationships (Required vs Complementary)
-- Updated cross-reference documentation with best practices
+**Skill 交叉引用清晰度**
+- 所有 skill 引用现在使用明确的 requirement 标记：
+  - `**REQUIRED BACKGROUND:**` - 你必须理解的先决条件
+  - `**REQUIRED SUB-SKILL:**` - 必须在工作流中使用的 skills
+  - `**Complementary skills:**` - 可选但有帮助的相关 skills
+- 移除了旧的路径格式（`skills/collaboration/X` → 只是 `X`）
+- 更新了带有分类关系的集成部分（必需 vs 补充）
+- 更新了交叉引用文档和最佳实践
 
-**Alignment with Anthropic best practices**
-- Fixed description grammar and voice (fully third-person)
-- Added Quick Reference tables for scanning
-- Added workflow checklists Claude can copy and track
-- Appropriate use of flowcharts for non-obvious decision points
-- Improved scannable table formats
-- All skills well under 500-line recommendation
+**与 Anthropic 最佳实践对齐**
+- 修复了描述语法和语气（完全第三人称）
+- 添加了扫描用的快速参考表
+- 添加了 Claude 可以复制和跟踪的工作流检查清单
+- 适当使用流程图处理非显而易见的决策点
+- 改进了可扫描的表格格式
+- 所有 skills 都远低于 500 行建议
 
-### Bug Fixes
+### Bug 修复
 
-- **Re-added missing command redirects** - Restored `commands/brainstorm.md` and `commands/write-plan.md` that were accidentally removed in v3.0 migration
-- Fixed `defense-in-depth` name mismatch (was `Defense-in-Depth-Validation`)
-- Fixed `receiving-code-review` name mismatch (was `Code-Review-Reception`)
-- Fixed `commands/brainstorm.md` reference to correct skill name
-- Removed references to non-existent related skills
+- **重新添加了缺失的命令重定向** - 恢复了 v3.0 迁移中意外移除的 `commands/brainstorm.md` 和 `commands/write-plan.md`
+- 修复了 `defense-in-depth` 名称不匹配（之前是 `Defense-in-Depth-Validation`）
+- 修复了 `receiving-code-review` 名称不匹配（之前是 `Code-Review-Reception`）
+- 修复了 `commands/brainstorm.md` 对正确 skill 名称的引用
+- 移除了对不存在的相关 skills 的引用
 
-### Documentation
+### 文档
 
-**writing-skills improvements**
-- Updated cross-referencing guidance with explicit requirement markers
-- Added reference to Anthropic's official best practices
-- Improved examples showing proper skill reference format
+**writing-skills 改进**
+- 更新了交叉引用指导，带有明确的 requirement 标记
+- 添加了对 Anthropic 官方最佳实践的引用
+- 改进了显示正确 skill 引用格式的示例
 
 ## v3.0.1 (2025-10-16)
 
-### Changes
+### 更改
 
-We now use Anthropic's first-party skills system!
+我们现在使用 Anthropic 的第一方 skills 系统！
 
 ## v2.0.2 (2025-10-12)
 
-### Bug Fixes
+### Bug 修复
 
-- **Fixed false warning when local skills repo is ahead of upstream** - The initialization script was incorrectly warning "New skills available from upstream" when the local repository had commits ahead of upstream. The logic now correctly distinguishes between three git states: local behind (should update), local ahead (no warning), and diverged (should warn).
+- **修复了当本地 skills 仓库领先于上游时的错误警告** - 初始化脚本在本地仓库有领先于上游的提交时错误地警告"有新 skills 可用"。逻辑现在正确区分三种 git 状态：本地落后（应该更新）、本地领先（不警告）、已分叉（应该警告）。
 
 ## v2.0.1 (2025-10-12)
 
-### Bug Fixes
+### Bug 修复
 
-- **Fixed session-start hook execution in plugin context** (#8, PR #9) - The hook was failing silently with "Plugin hook error" preventing skills context from loading. Fixed by:
-  - Using `${BASH_SOURCE[0]:-$0}` fallback when BASH_SOURCE is unbound in Claude Code's execution context
-  - Adding `|| true` to handle empty grep results gracefully when filtering status flags
+- **修复了插件上下文中的 session-start hook 执行** (#8, PR #9) - hook 静默失败并显示"插件 hook 错误"，阻止 skills 上下文加载。修复方法：
+  - 在 Claude Code 执行上下文中 BASH_SOURCE 未绑定时使用 `${BASH_SOURCE[0]:-$0}` 回退
+  - 添加 `|| true` 以在过滤状态标志时优雅地处理空 grep 结果
 
 ---
 
-# Superpowers v2.0.0 Release Notes
+# Superpowers v2.0.0 发布说明
 
-## Overview
+## 概述
 
-Superpowers v2.0 makes skills more accessible, maintainable, and community-driven through a major architectural shift.
+Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和社区驱动。
 
-The headline change is **skills repository separation**: all skills, scripts, and documentation have moved from the plugin into a dedicated repository ([obra/superpowers-skills](https://github.com/obra/superpowers-skills)). This transforms superpowers from a monolithic plugin into a lightweight shim that manages a local clone of the skills repository. Skills auto-update on session start. Users fork and contribute improvements via standard git workflows. The skills library versions independently from the plugin.
+头条变化是 **skills 仓库分离**：所有 skills、脚本和文档已从插件移至专用仓库（[obra/superpowers-skills](https://github.com/obra/superpowers-skills)）。这将 superpowers 从单一插件转变为管理本地克隆 skills 仓库的轻量级 shim。Skills 在会话开始时自动更新。用户通过标准 git 工作流分叉并贡献改进。Skills 库独立于插件版本。
 
-Beyond infrastructure, this release adds nine new skills focused on problem-solving, research, and architecture. We rewrote the core **using-skills** documentation with imperative tone and clearer structure, making it easier for Claude to understand when and how to use skills. **find-skills** now outputs paths you can paste directly into the Read tool, eliminating friction in the skills discovery workflow.
+除了基础设施，本次发布还添加了九个专注于解决问题、研究和架构的新 skills。我们用祈使语气和更清晰的结构重写了核心 **using-skills** 文档，使 Claude 更容易理解何时以及如何使用 skills。**find-skills** 现在输出可以直接粘贴到 Read 工具中的路径，消除了 skills 发现工作流中的摩擦。
 
-Users experience seamless operation: the plugin handles cloning, forking, and updating automatically. Contributors find the new architecture makes improving and sharing skills trivial. This release lays the foundation for skills to evolve rapidly as a community resource.
+用户体验无缝运作：插件自动处理克隆、分叉和更新。贡献者发现新架构使改进和共享 skills 变得轻而易举。本次发布为 skills 作为社区资源快速发展奠定了基础。
 
-## Breaking Changes
+### 破坏性更改
 
-### Skills Repository Separation
+**Skills 仓库分离**
 
-**The biggest change:** Skills no longer live in the plugin. They've been moved to a separate repository at [obra/superpowers-skills](https://github.com/obra/superpowers-skills).
+**最大变化：** Skills 不再存在于插件中。它们已移至 [obra/superpowers-skills](https://github.com/obra/superpowers-skills) 的单独仓库。
 
-**What this means for you:**
+**这对你意味着什么：**
 
-- **First install:** Plugin automatically clones skills to `~/.config/superpowers/skills/`
-- **Forking:** During setup, you'll be offered the option to fork the skills repo (if `gh` is installed)
-- **Updates:** Skills auto-update on session start (fast-forward when possible)
-- **Contributing:** Work on branches, commit locally, submit PRs to upstream
-- **No more shadowing:** Old two-tier system (personal/core) replaced with single-repo branch workflow
+- **首次安装：** 插件自动克隆 skills 到 `~/.config/superpowers/skills/`
+- **分叉：** 在设置期间，如果安装了 `gh`，系统会询问是否创建 skills 仓库的分叉
+- **更新：** Skills 在会话开始时自动更新（尽可能快进）
+- **贡献：** 在分支上工作，在本地提交，向上游提交 PR
+- **不再有覆盖：** 旧的两层系统（个人/核心）被单一仓库分支工作流取代
 
-**Migration:**
+**迁移：**
 
-If you have an existing installation:
-1. Your old `~/.config/superpowers/.git` will be backed up to `~/.config/superpowers/.git.bak`
-2. Old skills will be backed up to `~/.config/superpowers/skills.bak`
-3. Fresh clone of obra/superpowers-skills will be created at `~/.config/superpowers/skills/`
+如果你有现有安装：
+1. 你的旧 `~/.config/superpowers/.git` 将备份到 `~/.config/superpowers/.git.bak`
+2. 旧 skills 将备份到 `~/.config/superpowers/skills.bak`
+3. 将在 `~/.config/superpowers/skills/` 创建 obra/superpowers-skills 的新克隆
 
-### Removed Features
+### 移除的功能
 
-- **Personal superpowers overlay system** - Replaced with git branch workflow
-- **setup-personal-superpowers hook** - Replaced by initialize-skills.sh
+- **个人 superpowers 叠加系统** - 被 git 分支工作流取代
+- **setup-personal-superpowers hook** - 被 initialize-skills.sh 取代
 
-## New Features
+## 新功能
 
-### Skills Repository Infrastructure
+### Skills 仓库基础设施
 
-**Automatic Clone & Setup** (`lib/initialize-skills.sh`)
-- Clones obra/superpowers-skills on first run
-- Offers fork creation if GitHub CLI is installed
-- Sets up upstream/origin remotes correctly
-- Handles migration from old installation
+**自动克隆和设置** (`lib/initialize-skills.sh`)
+- 首次运行时克隆 obra/superpowers-skills
+- 如果安装了 GitHub CLI 则提供创建分叉
+- 正确设置 upstream/origin 远程
+- 处理从旧安装迁移
 
-**Auto-Update**
-- Fetches from tracking remote on every session start
-- Auto-merges with fast-forward when possible
-- Notifies when manual sync needed (branch diverged)
-- Uses pulling-updates-from-skills-repository skill for manual sync
+**自动更新**
+- 每次会话开始时从跟踪远程获取
+- 尽可能自动合并快进
+- 在需要手动同步时通知（分支已分叉）
+- 使用 pulling-updates-from-skills-repository skill 进行手动同步
 
-### New Skills
+### 新 Skills
 
-**Problem-Solving Skills** (`skills/problem-solving/`)
-- **collision-zone-thinking** - Force unrelated concepts together for emergent insights
-- **inversion-exercise** - Flip assumptions to reveal hidden constraints
-- **meta-pattern-recognition** - Spot universal principles across domains
-- **scale-game** - Test at extremes to expose fundamental truths
-- **simplification-cascades** - Find insights that eliminate multiple components
-- **when-stuck** - Dispatch to right problem-solving technique
+**解决问题 Skills** (`skills/problem-solving/`)
+- **collision-zone-thinking** - 强制无关概念融合以获得突发洞察
+- **inversion-exercise** - 翻转假设以揭示隐藏约束
+- **meta-pattern-recognition** - 发现跨领域的通用原则
+- **scale-game** - 在极端情况下测试以暴露基本真理
+- **simplification-cascades** - 找到消除多个组件的洞察
+- **when-stuck** - 分配到正确的解决问题技术
 
-**Research Skills** (`skills/research/`)
-- **tracing-knowledge-lineages** - Understand how ideas evolved over time
+**研究 Skills** (`skills/research/`)
+- **tracing-knowledge-lineages** - 理解想法如何随着时间演变
 
-**Architecture Skills** (`skills/architecture/`)
-- **preserving-productive-tensions** - Keep multiple valid approaches instead of forcing premature resolution
+**架构 Skills** (`skills/architecture/`)
+- **preserving-productive-tensions** - 保持多个有效方法而不是强制过早解决
 
-### Skills Improvements
+### Skills 改进
 
-**using-skills (formerly getting-started)**
-- Renamed from getting-started to using-skills
-- Complete rewrite with imperative tone (v4.0.0)
-- Front-loaded critical rules
-- Added "Why" explanations for all workflows
-- Always includes /SKILL.md suffix in references
-- Clearer distinction between rigid rules and flexible patterns
+**using-skills（之前是 getting-started）**
+- 从 getting-started 重命名为 using-skills
+- 用祈使语气完全重写 (v4.0.0)
+- 前置关键规则
+- 为所有工作流添加"为什么"解释
+- 引用中始终包含 /SKILL.md 后缀
+- 更清晰地区分刚性规则和灵活模式
 
 **writing-skills**
-- Cross-referencing guidance moved from using-skills
-- Added token efficiency section (word count targets)
-- Improved CSO (Claude Search Optimization) guidance
+- 交叉引用指导从 using-skills 移出
+- 添加了 token 效率部分（字数目标）
+- 改进了 CSO（Claude 搜索优化）指导
 
 **sharing-skills**
-- Updated for new branch-and-PR workflow (v2.0.0)
-- Removed personal/core split references
+- 更新为新的分支和 PR 工作流 (v2.0.0)
+- 移除了个人/核心分割引用
 
-**pulling-updates-from-skills-repository** (new)
-- Complete workflow for syncing with upstream
-- Replaces old "updating-skills" skill
+**pulling-updates-from-skills-repository**（新增）
+- 与上游同步的完整工作流
+- 取代旧的"updating-skills" skill
 
-### Tools Improvements
+### 工具改进
 
 **find-skills**
-- Now outputs full paths with /SKILL.md suffix
-- Makes paths directly usable with Read tool
-- Updated help text
+- 现在输出带有 /SKILL.md 后缀的完整路径
+- 使路径可以直接与 Read 工具一起使用
+- 更新了帮助文本
 
 **skill-run**
-- Moved from scripts/ to skills/using-skills/
-- Improved documentation
+- 从 scripts/ 移至 skills/using-skills/
+- 改进了文档
 
-### Plugin Infrastructure
+### 插件基础设施
 
-**Session Start Hook**
-- Now loads from skills repository location
-- Shows full skills list at session start
-- Prints skills location info
-- Shows update status (updated successfully / behind upstream)
-- Moved "skills behind" warning to end of output
+**会话开始 Hook**
+- 现在从 skills 仓库位置加载
+- 在会话开始时显示完整 skills 列表
+- 打印 skills 位置信息
+- 显示更新状态（更新成功/落后于上游）
+- 将"skills 落后"警告移至输出末尾
 
-**Environment Variables**
-- `SUPERPOWERS_SKILLS_ROOT` set to `~/.config/superpowers/skills`
-- Used consistently throughout all paths
+**环境变量**
+- `SUPERPOWERS_SKILLS_ROOT` 设置为 `~/.config/superpowers/skills`
+- 在所有路径中一致使用
 
-## Bug Fixes
+### Bug 修复
 
-- Fixed duplicate upstream remote addition when forking
-- Fixed find-skills double "skills/" prefix in output
-- Removed obsolete setup-personal-superpowers call from session-start
-- Fixed path references throughout hooks and commands
+- 修复了分叉时重复添加 upstream 远程的问题
+- 修复了 find-skills 输出中双"skills/"前缀的问题
+- 从 session-start 中移除了过时的 setup-personal-superpowers 调用
+- 修复了整个 hooks 和命令中的路径引用
 
-## Documentation
+### 文档
 
 ### README
-- Updated for new skills repository architecture
-- Prominent link to superpowers-skills repo
-- Updated auto-update description
-- Fixed skill names and references
-- Updated Meta skills list
+- 为新的 skills 仓库架构更新
+- 突出显示 superpowers-skills 仓库链接
+- 更新了自动更新描述
+- 修复了 skill 名称和引用
+- 更新了 Meta skills 列表
 
-### Testing Documentation
-- Added comprehensive testing checklist (`docs/TESTING-CHECKLIST.md`)
-- Created local marketplace config for testing
-- Documented manual testing scenarios
+### 测试文档
+- 添加了全面的测试检查清单 (`docs/TESTING-CHECKLIST.md`)
+- 创建了用于测试的本地市场配置
+- 记录了手动测试场景
 
-## Technical Details
+### 技术细节
 
-### File Changes
+### 文件更改
 
-**Added:**
-- `lib/initialize-skills.sh` - Skills repo initialization and auto-update
-- `docs/TESTING-CHECKLIST.md` - Manual testing scenarios
-- `.claude-plugin/marketplace.json` - Local testing config
+**新增：**
+- `lib/initialize-skills.sh` - Skills 仓库初始化和自动更新
+- `docs/TESTING-CHECKLIST.md` - 手动测试场景
+- `.claude-plugin/marketplace.json` - 本地测试配置
 
-**Removed:**
-- `skills/` directory (82 files) - Now in obra/superpowers-skills
-- `scripts/` directory - Now in obra/superpowers-skills/skills/using-skills/
-- `hooks/setup-personal-superpowers.sh` - Obsolete
+**移除：**
+- `skills/` 目录（82 个文件）- 现在在 obra/superpowers-skills
+- `scripts/` 目录 - 现在在 obra/superpowers-skills/skills/using-skills/
+- `hooks/setup-personal-superpowers.sh` - 过时
 
-**Modified:**
-- `hooks/session-start.sh` - Use skills from ~/.config/superpowers/skills
-- `commands/brainstorm.md` - Updated paths to SUPERPOWERS_SKILLS_ROOT
-- `commands/write-plan.md` - Updated paths to SUPERPOWERS_SKILLS_ROOT
-- `commands/execute-plan.md` - Updated paths to SUPERPOWERS_SKILLS_ROOT
-- `README.md` - Complete rewrite for new architecture
+**修改：**
+- `hooks/session-start.sh` - 使用来自 ~/.config/superpowers/skills 的 skills
+- `commands/brainstorm.md` - 更新路径到 SUPERPOWERS_SKILLS_ROOT
+- `commands/write-plan.md` - 更新路径到 SUPERPOWERS_SKILLS_ROOT
+- `commands/execute-plan.md` - 更新路径到 SUPERPOWERS_SKILLS_ROOT
+- `README.md` - 为新架构完全重写
 
-### Commit History
+### 提交历史
 
-This release includes:
-- 20+ commits for skills repository separation
-- PR #1: Amplifier-inspired problem-solving and research skills
-- PR #2: Personal superpowers overlay system (later replaced)
-- Multiple skill refinements and documentation improvements
+此版本包括：
+- 20+ 次用于 skills 仓库分离的提交
+- PR #1: Amplifier 启发的问题解决和研究 skills
+- PR #2: 个人 superpowers 叠加系统（后来被取代）
+- 多次 skill 改进和文档改进
 
-## Upgrade Instructions
+## 升级说明
 
-### Fresh Install
+### 全新安装
 
 ```bash
-# In Claude Code
+# 在 Claude Code 中
 /plugin marketplace add obra/superpowers-marketplace
 /plugin install superpowers@superpowers-marketplace
 ```
 
-The plugin handles everything automatically.
+插件自动处理一切。
 
-### Upgrading from v1.x
+### 从 v1.x 升级
 
-1. **Backup your personal skills** (if you have any):
+1. **备份你的个人 skills**（如果有的话）：
    ```bash
    cp -r ~/.config/superpowers/skills ~/superpowers-skills-backup
    ```
 
-2. **Update the plugin:**
+2. **更新插件：**
    ```bash
    /plugin update superpowers
    ```
 
-3. **On next session start:**
-   - Old installation will be backed up automatically
-   - Fresh skills repo will be cloned
-   - If you have GitHub CLI, you'll be offered the option to fork
+3. **在下次会话开始时：**
+   - 旧安装将自动备份
+   - 将克隆新的 skills 仓库
+   - 如果你有 GitHub CLI，系统会询问是否创建分叉
 
-4. **Migrate personal skills** (if you had any):
-   - Create a branch in your local skills repo
-   - Copy your personal skills from backup
-   - Commit and push to your fork
-   - Consider contributing back via PR
+4. **迁移个人 skills**（如果有的话）：
+   - 在你的本地 skills 仓库中创建一个分支
+   - 从备份中复制你的个人 skills
+   - 提交并推送到你的分叉
+   - 考虑通过 PR 贡献回来
 
-## What's Next
+## 下一步
 
-### For Users
+### 对于用户
+- 探索新的解决问题 skills
+- 尝试基于分支的工作流来改进 skills
+- 为社区贡献 skills
 
-- Explore the new problem-solving skills
-- Try the branch-based workflow for skill improvements
-- Contribute skills back to the community
+### 对于贡献者
+- Skills 仓库现在位于 https://github.com/obra/superpowers-skills
+- 分叉 → 分支 → PR 工作流
+- 参阅 skills/meta/writing-skills/SKILL.md 了解文档的 TDD 方法
 
-### For Contributors
+## 已知问题
 
-- Skills repository is now at https://github.com/obra/superpowers-skills
-- Fork → Branch → PR workflow
-- See skills/meta/writing-skills/SKILL.md for TDD approach to documentation
+目前没有。
 
-## Known Issues
+## 致谢
 
-None at this time.
-
-## Credits
-
-- Problem-solving skills inspired by Amplifier patterns
-- Community contributions and feedback
-- Extensive testing and iteration on skill effectiveness
+- 问题解决 skills 受到 Amplifier 模式的启发
+- 社区贡献和反馈
+- 对 skill 有效性的广泛测试和迭代
 
 ---
 
-**Full Changelog:** https://github.com/obra/superpowers/compare/dd013f6...main
-**Skills Repository:** https://github.com/obra/superpowers-skills
-**Issues:** https://github.com/obra/superpowers/issues
+**完整变更日志：** https://github.com/obra/superpowers/compare/dd013f6...main
+**Skills 仓库：** https://github.com/obra/superpowers-skills
+**问题：** https://github.com/obra/superpowers/issues

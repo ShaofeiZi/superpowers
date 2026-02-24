@@ -1,25 +1,24 @@
 #!/usr/bin/env bash
-# SessionStart hook for superpowers plugin
+# superpowers 插件的 SessionStart 钩子
 
 set -euo pipefail
 
-# Determine plugin root directory
+# 确定插件根目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Check if legacy skills directory exists and build warning
+# 检查旧版 skills 目录是否存在并构建警告信息
 warning_message=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
 if [ -d "$legacy_skills_dir" ]; then
-    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
+    warning_message="\n\n<important-reminder>在此消息后首次回复时必须告知用户：⚠️ **警告：** Superpowers 现在使用 Claude Code 的 skills 系统。自定义 skills 不会被读取。请将自定义 skills 移动到 ~/.claude/skills。要使此消息消失，请删除 ~/.config/superpowers/skills</important-reminder>"
 fi
 
-# Read using-superpowers content
+# 读取 using-superpowers 内容
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
-# Escape string for JSON embedding using bash parameter substitution.
-# Each ${s//old/new} is a single C-level pass - orders of magnitude
-# faster than the character-by-character loop this replaces.
+# 使用 bash 参数替换转义字符串以嵌入 JSON。
+# 每个 ${s//old/new} 都是一次 C 级别的替换 - 比它替换的逐字符循环快几个数量级。
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -32,12 +31,12 @@ escape_for_json() {
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+session_context="<EXTREMELY_IMPORTANT>\n你有超能力。\n\n**以下是您的 'superpowers:using-superpowers' skill 的完整内容 - 这是您使用 skills 的入门指南。对于所有其他 skills，请使用 'Skill' 工具：**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
 
-# Output context injection as JSON.
-# Keep both shapes for compatibility:
-# - Cursor hooks expect additional_context.
-# - Claude hooks expect hookSpecificOutput.additionalContext.
+# 输出上下文注入为 JSON。
+# 保持两种格式以兼容：
+# - Cursor 钩子期望 additional_context。
+# - Claude 钩子期望 hookSpecificOutput.additionalContext。
 cat <<EOF
 {
   "additional_context": "${session_context}",
