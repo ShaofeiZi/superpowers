@@ -31,7 +31,7 @@ Superpowers 是一个完整的软件开发生工作流，专为你的编码代�
 在 Claude Code 中，首先注册市场：
 
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add ShaofeiZi/superpowers-marketplace
 ```
 
 然后从市场安装插件：
@@ -53,7 +53,7 @@ Superpowers 是一个完整的软件开发生工作流，专为你的编码代�
 告诉 Codex：
 
 ```
-从 https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md 获取并遵循说明
+从 https://raw.githubusercontent.com/ShaofeiZi/superpowers/refs/heads/main/.codex/INSTALL.md 获取并遵循说明
 ```
 
 **详细文档：** [docs/README.codex.md](docs/README.codex.md)
@@ -63,7 +63,7 @@ Superpowers 是一个完整的软件开发生工作流，专为你的编码代�
 告诉 OpenCode：
 
 ```
-从 https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md 获取并遵循说明
+从 https://raw.githubusercontent.com/ShaofeiZi/superpowers/refs/heads/main/.opencode/INSTALL.md 获取并遵循说明
 ```
 
 **详细文档：** [docs/README.opencode.md](docs/README.opencode.md)
@@ -150,5 +150,5 @@ MIT 许可证 - 详见 LICENSE 文件
 
 ## 支持
 
-- **问题**：https://github.com/obra/superpowers/issues
-- **市场**：https://github.com/obra/superpowers-marketplace
+- **问题**：https://github.com/ShaofeiZi/superpowers/issues
+- **市场**：https://github.com/ShaofeiZi/superpowers-marketplace

@@ -7,7 +7,7 @@
 告诉 OpenCode：
 
 ```
-Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
+Clone https://github.com/ShaofeiZi/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
 ```
 
 ## 手动安装
@@ -24,7 +24,7 @@ Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, the
 if [ -d ~/.config/opencode/superpowers ]; then
   cd ~/.config/opencode/superpowers && git pull
 else
-  git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+  git clone https://github.com/ShaofeiZi/superpowers.git ~/.config/opencode/superpowers
 fi
 
 # 2. 创建目录
@@ -66,7 +66,7 @@ ls -l ~/.config/opencode/skills/superpowers
 
 ```cmd
 :: 1. 安装 Superpowers
-git clone https://github.com/obra/superpowers.git "%USERPROFILE%\.config\opencode\superpowers"
+git clone https://github.com/ShaofeiZi/superpowers.git "%USERPROFILE%\.config\opencode\superpowers"
 
 :: 2. 创建目录
 mkdir "%USERPROFILE%\.config\opencode\plugins" 2>nul
@@ -91,7 +91,7 @@ mklink /J "%USERPROFILE%\.config\opencode\skills\superpowers" "%USERPROFILE%\.co
 
 ```powershell
 # 1. 安装 Superpowers
-git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
+git clone https://github.com/ShaofeiZi/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
 
 # 2. 创建目录
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugins"
@@ -116,7 +116,7 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\supe
 
 ```bash
 # 1. 安装 Superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/ShaofeiZi/superpowers.git ~/.config/opencode/superpowers
 
 # 2. 创建目录
 mkdir -p ~/.config/opencode/plugins ~/.config/opencode/skills
@@ -308,8 +308,8 @@ git pull
 
 ## 获取帮助
 
-- 报告问题：https://github.com/obra/superpowers/issues
-- 主文档：https://github.com/obra/superpowers
+- 报告问题：https://github.com/ShaofeiZi/superpowers/issues
+- 主文档：https://github.com/ShaofeiZi/superpowers
 - OpenCode 文档：https://opencode.ai/docs/
 
 ## 测试

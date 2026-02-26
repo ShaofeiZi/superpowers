@@ -780,7 +780,7 @@ git commit -m "feat: implement session.started hook for opencode"
 ```bash
 # 将 superpowers skills 克隆到 OpenCode 配置目录
 mkdir -p ~/.config/opencode/superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/ShaofeiZi/superpowers.git ~/.config/opencode/superpowers
 ```
 
 ### 2. 安装插件
@@ -878,8 +878,8 @@ git pull
 
 ## 获取帮助
 
-- 报告问题：https://github.com/obra/superpowers/issues
-- 文档：https://github.com/obra/superpowers
+- 报告问题：https://github.com/ShaofeiZi/superpowers/issues
+- 文档：https://github.com/ShaofeiZi/superpowers
 ```
 
 **步骤 2：验证文件已创建**

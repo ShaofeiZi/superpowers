@@ -575,7 +575,7 @@ Skill 工具是在 Claude Code 中调用 skills 的正确机制。此更新修�
 
 Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和社区驱动。
 
-头条变化是 **skills 仓库分离**：所有 skills、脚本和文档已从插件移至专用仓库（[obra/superpowers-skills](https://github.com/obra/superpowers-skills)）。这将 superpowers 从单一插件转变为管理本地克隆 skills 仓库的轻量级 shim。Skills 在会话开始时自动更新。用户通过标准 git 工作流分叉并贡献改进。Skills 库独立于插件版本。
+头条变化是 **skills 仓库分离**：所有 skills、脚本和文档已从插件移至专用仓库（[ShaofeiZi/superpowers-skills](https://github.com/ShaofeiZi/superpowers-skills)）。这将 superpowers 从单一插件转变为管理本地克隆 skills 仓库的轻量级 shim。Skills 在会话开始时自动更新。用户通过标准 git 工作流分叉并贡献改进。Skills 库独立于插件版本。
 
 除了基础设施，本次发布还添加了九个专注于解决问题、研究和架构的新 skills。我们用祈使语气和更清晰的结构重写了核心 **using-skills** 文档，使 Claude 更容易理解何时以及如何使用 skills。**find-skills** 现在输出可以直接粘贴到 Read 工具中的路径，消除了 skills 发现工作流中的摩擦。
 
@@ -585,7 +585,7 @@ Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和�
 
 **Skills 仓库分离**
 
-**最大变化：** Skills 不再存在于插件中。它们已移至 [obra/superpowers-skills](https://github.com/obra/superpowers-skills) 的单独仓库。
+**最大变化：** Skills 不再存在于插件中。它们已移至 [ShaofeiZi/superpowers-skills](https://github.com/ShaofeiZi/superpowers-skills) 的单独仓库。
 
 **这对你意味着什么：**
 
@@ -600,7 +600,7 @@ Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和�
 如果你有现有安装：
 1. 你的旧 `~/.config/superpowers/.git` 将备份到 `~/.config/superpowers/.git.bak`
 2. 旧 skills 将备份到 `~/.config/superpowers/skills.bak`
-3. 将在 `~/.config/superpowers/skills/` 创建 obra/superpowers-skills 的新克隆
+3. 将在 `~/.config/superpowers/skills/` 创建 ShaofeiZi/superpowers-skills 的新克隆
 
 ### 移除的功能
 
@@ -612,7 +612,7 @@ Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和�
 ### Skills 仓库基础设施
 
 **自动克隆和设置** (`lib/initialize-skills.sh`)
-- 首次运行时克隆 obra/superpowers-skills
+- 首次运行时克隆 ShaofeiZi/superpowers-skills
 - 如果安装了 GitHub CLI 则提供创建分叉
 - 正确设置 upstream/origin 远程
 - 处理从旧安装迁移
@@ -717,8 +717,8 @@ Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和�
 - `.claude-plugin/marketplace.json` - 本地测试配置
 
 **移除：**
-- `skills/` 目录（82 个文件）- 现在在 obra/superpowers-skills
-- `scripts/` 目录 - 现在在 obra/superpowers-skills/skills/using-skills/
+- `skills/` 目录（82 个文件）- 现在在 ShaofeiZi/superpowers-skills
+- `scripts/` 目录 - 现在在 ShaofeiZi/superpowers-skills/skills/using-skills/
 - `hooks/setup-personal-superpowers.sh` - 过时
 
 **修改：**
@@ -742,7 +742,7 @@ Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和�
 
 ```bash
 # 在 Claude Code 中
-/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add ShaofeiZi/superpowers-marketplace
 /plugin install superpowers@superpowers-marketplace
 ```
 
@@ -779,7 +779,7 @@ Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和�
 - 为社区贡献 skills
 
 ### 对于贡献者
-- Skills 仓库现在位于 https://github.com/obra/superpowers-skills
+- Skills 仓库现在位于 https://github.com/ShaofeiZi/superpowers-skills
 - 分叉 → 分支 → PR 工作流
 - 参阅 skills/meta/writing-skills/SKILL.md 了解文档的 TDD 方法
 
@@ -795,6 +795,6 @@ Superpowers v2.0 通过重大架构转变使 skills 更容易访问、维护和�
 
 ---
 
-**完整变更日志：** https://github.com/obra/superpowers/compare/dd013f6...main
-**Skills 仓库：** https://github.com/obra/superpowers-skills
-**问题：** https://github.com/obra/superpowers/issues
+**完整变更日志：** https://github.com/ShaofeiZi/superpowers/compare/dd013f6...main
+**Skills 仓库：** https://github.com/ShaofeiZi/superpowers-skills
+**问题：** https://github.com/ShaofeiZi/superpowers/issues
